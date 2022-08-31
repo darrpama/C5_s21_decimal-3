@@ -1,0 +1,1096 @@
+#include "s21_decimal.h"
+
+s21_decimal s21LargeTest = {{-1,-1,-1,0}};
+
+s21_decimal s21SmallTest = {{1,0,0,0}};
+
+s21_decimal s21NullTest = {{0,0,0,0}};
+
+s21_decimal s21NegSmallTest= {{-1,-1,-1,0}};
+
+s21_decimal s21One = {{1,0,0,0}};
+
+
+#tcase arithmetic
+
+#test add1
+s21_decimal s21AddTest1 = {{1,1,1,0}};
+s21_decimal s21AddTest2 = {{1,1,1,0}};
+s21_decimal s21AddTest3 = {{-1,-1,-1,0}};
+set_bit_1(&s21AddTest3, 127);
+s21_decimal resAddTest = {{0,0,0,0}};
+s21_decimal resCorrectAddTest = {{2,2,2,0}};
+int addReturn = 0;
+
+addReturn = s21_add(s21AddTest1, s21AddTest2, &resAddTest);
+ck_assert_int_eq(addReturn, 0);
+ck_assert_int_eq(s21_is_equal(resAddTest, resCorrectAddTest), 1);
+
+addReturn = s21_add(s21LargeTest, s21AddTest2, &resAddTest);
+ck_assert_int_eq(addReturn, 1); // error 1
+
+#test normal_add
+s21_decimal a = {{123, 0, 0, 0}}, b = {{456, 0, 0, 0}}, c = {{579, 0, 0, 0}}, res;
+setScale(&a, 5);
+setScale(&b, 5);
+setScale(&c, 5);
+
+s21_add(a, b, &res);
+ck_assert_int_eq(s21_is_equal(res, c), 1);
+
+#test first_negative_add
+s21_decimal a = {{123, 0, 0, 0}}, b = {{456, 0, 0, 0}}, c = {{333, 0, 0, 0}}, res;
+setScale(&a, 5);
+setScale(&b, 5);
+setScale(&c, 5);
+set_sign(&a, 1);
+
+s21_add(a, b, &res);
+ck_assert_int_eq(s21_is_equal(res, c), 1);
+
+#test first_negative_add_1
+s21_decimal a = {{555, 0, 0, 0}}, b = {{456, 0, 0, 0}}, c = {{99, 0, 0, 0}}, res;
+setScale(&a, 5);
+setScale(&b, 5);
+setScale(&c, 5);
+set_sign(&a, 1);
+set_sign(&c, 1);
+
+s21_add(a, b, &res);
+ck_assert_int_eq(s21_is_equal(res, c), 1);
+
+#test second_negative_add
+s21_decimal a = {{123, 0, 0, 0}}, b = {{456, 0, 0, 0}}, c = {{333, 0, 0, 0}}, res;
+setScale(&a, 5);
+setScale(&b, 5);
+setScale(&c, 5);
+set_sign(&b, 1);
+set_sign(&c, 1);
+
+s21_add(a, b, &res);
+ck_assert_int_eq(s21_is_equal(res, c), 1);
+
+#test second_negative_add_1
+s21_decimal a = {{555, 0, 0, 0}}, b = {{456, 0, 0, 0}}, c = {{99, 0, 0, 0}}, res;
+setScale(&a, 5);
+setScale(&b, 5);
+setScale(&c, 5);
+set_sign(&b, 1);
+
+s21_add(a, b, &res);
+ck_assert_int_eq(s21_is_equal(res, c), 1);
+
+
+#test sub1
+s21_decimal s21SubTest1 = {{2,2,2,0}};
+s21_decimal s21SubTest11 = {{2,2,2,0}};
+s21_decimal s21NegLarge = {{-1,-1,-1,0}};
+set_sign(&s21NegLarge, 1);
+s21_decimal resSubTest = {{0,0,0,0}};
+s21_decimal resCorrectSubTest = {{0,0,0,0}};
+setScale(&s21SmallTest, 28);
+int subReturn = 0;
+
+subReturn = s21_sub(s21SubTest1, s21SubTest11, &resSubTest);
+ck_assert_int_eq(subReturn, 0);
+ck_assert_int_eq(s21_is_equal(resSubTest, resCorrectSubTest), 1);
+
+subReturn = s21_sub(s21LargeTest, s21NegLarge, &resSubTest);
+ck_assert_int_eq(subReturn, 1); // ? error 1 ?
+
+subReturn = s21_sub(s21NegLarge, s21LargeTest, &resSubTest);
+ck_assert_int_eq(subReturn, 2); // error 2
+
+
+#test mul
+s21_decimal s21MulTest1 = {{4,4,0,0}};
+s21_decimal s21MulTest2 = {{4,4,0,0}};
+s21_decimal resMulTest = {{0,0,0,0}};
+s21_decimal resCorrectMulTest = {{16,32,16,0}};
+s21_decimal s21NegLarge = {{-1,-1,-1,0}};
+set_sign(&s21NegLarge, 1);
+int mulReturn = 0;
+
+mulReturn = s21_mul(s21MulTest1, s21MulTest2, &resMulTest);
+ck_assert_int_eq(mulReturn, 0);
+ck_assert_int_eq(s21_is_equal(resMulTest, resCorrectMulTest), 1);
+
+mulReturn = s21_mul(s21LargeTest, s21MulTest2, &resMulTest);
+ck_assert_int_eq(mulReturn, 1); // error 1
+
+mulReturn = s21_mul(s21NegLarge, s21LargeTest, &resMulTest);
+ck_assert_int_eq(mulReturn, 2); // ? error 2 ?
+
+
+#test division
+s21_decimal s21DivTest1 = {{16,0,0,0}};
+s21_decimal s21DivTest2 = {{4,0,0,0}};
+s21_decimal s21DivTest3 = {{16,0,0,0}};
+set_sign(&s21DivTest3, 1);
+s21_decimal s21DivTest4 = {{4,0,0,0}};
+s21_decimal resDivTest = {{0,0,0,0}};
+s21_decimal resCorrectDivTest1 = {{4,0,0,0}};
+s21_decimal resCorrectDivTest2 = {{4,0,0,0}};
+set_sign(&resCorrectDivTest2, 1);
+setScale(&s21SmallTest, 28);
+int divReturn = 0;
+
+divReturn = s21_div(s21DivTest1, s21DivTest2, &resDivTest);
+ck_assert_int_eq(divReturn, 0);
+ck_assert_int_eq(s21_is_equal(resDivTest, resCorrectDivTest1), 1);
+
+divReturn = s21_div(s21DivTest3, s21DivTest4, &resDivTest);
+ck_assert_int_eq(divReturn, 0);
+ck_assert_int_eq(s21_is_equal(resDivTest, resCorrectDivTest2), 1);
+
+divReturn = s21_div(s21LargeTest, s21SmallTest, &resDivTest);
+ck_assert_int_eq(divReturn, 1); // ? error 1 ?
+
+divReturn = s21_div(s21SmallTest, s21DivTest2, &resDivTest);
+ck_assert_int_eq(divReturn, 2); // ? error 2 ?
+
+divReturn = s21_div(s21DivTest1, s21NullTest, &resDivTest);
+ck_assert_int_eq(divReturn, 3); //  error 3
+
+
+#test mod
+s21_decimal s21ModTest1 = {{17,0,0,0}};
+s21_decimal s21ModTest2 = {{4,0,0,0}};
+s21_decimal resModTest = {{0,0,0,0}};
+s21_decimal resCorrectModTest = {{1,0,0,0}};
+setScale(&s21SmallTest, 28);
+int modReturn = 0;
+
+modReturn = s21_mod(s21ModTest1, s21ModTest2, &resModTest);
+ck_assert_int_eq(modReturn, 0);
+ck_assert_int_eq(s21_is_equal(resModTest, resCorrectModTest), 1);
+/*
+modReturn = s21_mod(s21LargeTest, s21SmallTest, &resModTest);
+ck_assert_int_eq(modReturn, 1); // ? error 1 ?
+
+modReturn = s21_mod(s21SmallTest, s21LargeTest, &resModTest);
+ck_assert_int_eq(modReturn, 2); // ? error 2 ?
+*/
+modReturn = s21_mod(s21ModTest1, s21NullTest, &resModTest);
+ck_assert_int_eq(modReturn, 3); //  error 3
+
+
+#tcase compare
+
+#test is_less
+s21_decimal s21LessTest1 = {{65,65,65,0}};
+s21_decimal s21LessdTest2 = {{65,65,66,0}};
+s21_decimal s21LessdTest3 = {{65,65,64,0}};
+int lessReturn = 0;
+
+lessReturn = s21_is_less(s21LessTest1, s21LessdTest2);
+ck_assert_int_eq(lessReturn, 1);
+
+lessReturn = s21_is_less(s21LessTest1, s21LessdTest3);
+ck_assert_int_eq(lessReturn, 0);
+
+#test decimal_is_less_1
+s21_decimal x = {{4294967295, 0, 0, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 1, 0, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less(x, y);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_2
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less(y, x);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_3
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less(y, x);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_4
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less(x, y);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_5
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less(y, x);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_6
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less(y, x);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_7
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less(x, y);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_8
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less(x, y);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test is_less_or_eq_1
+s21_decimal s21LessOrEqTest1 = {{1,1,1,0}};
+s21_decimal s21LessOrEqTest2 = {{1,1,1,0}};
+s21_decimal s21LessOrEqTest3 = {{1,1,2,0}};
+int lessOrEqReturn = 0;
+
+lessOrEqReturn = s21_is_less_or_equal(s21LessOrEqTest1, s21LessOrEqTest2);
+ck_assert_int_eq(lessOrEqReturn, 1);
+
+lessOrEqReturn = s21_is_less_or_equal(s21LessOrEqTest1, s21LessOrEqTest3);
+ck_assert_int_eq(lessOrEqReturn, 1);
+
+lessOrEqReturn = s21_is_less_or_equal(s21LessOrEqTest3, s21LessOrEqTest1);
+ck_assert_int_eq(lessOrEqReturn, 0);
+
+#test is_less_or_eq_2
+s21_decimal a = {{0, 12345, 6789, 101111}}, b = {{0, 12345, 6789, 101111}};
+setScale(&a, 5);
+setScale(&b, 5);
+ck_assert_int_eq(s21_is_less_or_equal(a, b), 1);
+
+#test decimal_is_less_or_equal_1
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(x, y);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_2
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(y, x);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_or_equal_3
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(y, x);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_4
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(x, y);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_5
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 2, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(y, x);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_6
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(y, x);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_7
+s21_decimal x = {{0, 0, 1, 0b10000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b00000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(x, y);
+int res2 = 1;
+ck_assert_int_eq(res1, res2);
+
+#test decimal_is_less_or_equal_8
+s21_decimal x = {{0, 0, 1, 0b00000000000000000000000000000000}};
+s21_decimal y = {{0, 0, 1, 0b10000000000000000000000000000000}};
+int res1 = s21_is_less_or_equal(x, y);
+int res2 = 0;
+ck_assert_int_eq(res1, res2);
+
+#test is_greater
+s21_decimal s21GreaterTest1 = {{4,4,4,0}};
+s21_decimal s21GreaterTest2 = {{3,3,3,0}};
+s21_decimal s21GreaterTest3 = {{5,5,5,0}};
+int greaterReturn = 0;
+
+greaterReturn = s21_is_greater(s21GreaterTest1, s21GreaterTest2);
+ck_assert_int_eq(greaterReturn, 1);
+
+greaterReturn = s21_is_greater(s21GreaterTest1, s21GreaterTest3);
+ck_assert_int_eq(greaterReturn, 0);
+
+
+#test is_greater_or_eq
+s21_decimal s21GreaterOrEqTest1 = {{4,4,4,0}};
+s21_decimal s21GreaterOrEqTest2 = {{4,4,4,0}};
+s21_decimal s21GreaterOrEqTest3 = {{5,5,5,0}};
+int greaterOrEqReturn = 0;
+
+greaterOrEqReturn = s21_is_greater_or_equal(s21GreaterOrEqTest1, s21GreaterOrEqTest2);
+ck_assert_int_eq(greaterOrEqReturn, 1);
+
+greaterOrEqReturn = s21_is_greater_or_equal(s21GreaterOrEqTest1, s21GreaterOrEqTest3);
+ck_assert_int_eq(greaterOrEqReturn, 0);
+
+
+#test is_equal
+s21_decimal s21EqualTest1 = {{4,4,4,0}};
+s21_decimal s21EqualTest2 = {{4,4,4,0}};
+s21_decimal s21EqualTest3 = {{6,5,4,0}};
+int equalReturn = 0;
+
+equalReturn = s21_is_equal(s21EqualTest1, s21EqualTest2);
+ck_assert_int_eq(equalReturn, 1);
+
+equalReturn = s21_is_equal(s21EqualTest1, s21EqualTest3);
+ck_assert_int_eq(equalReturn, 0);
+
+
+#test is_not_equal
+s21_decimal s21NotEqualTest1 = {{4,4,4,0}};
+s21_decimal s21NotEqualTest2 = {{6,5,4,0}};
+s21_decimal s21NotEqualTest3 = {{4,4,4,0}};
+int notEqualReturn = 0;
+
+notEqualReturn = s21_is_not_equal(s21NotEqualTest1, s21NotEqualTest2);
+ck_assert_int_eq(notEqualReturn, 1);
+
+notEqualReturn = s21_is_not_equal(s21NotEqualTest1, s21NotEqualTest3);
+ck_assert_int_eq(notEqualReturn, 0);
+
+
+#tcase converters
+// преобразователи
+#test from_int_to_decimal
+s21_decimal s21ConvertIntTest = {{0,0,0,0}};
+int convertIntTest1 = 1;
+int convertIntTest2 = 0;
+int convertIntReturn = 0;
+
+convertIntReturn = s21_from_int_to_decimal(convertIntTest1, &s21ConvertIntTest);
+ck_assert_int_eq(convertIntReturn, 0);
+ck_assert_int_eq(s21_is_equal(s21ConvertIntTest, s21One), 1);
+
+convertIntReturn = s21_from_decimal_to_int(s21ConvertIntTest, &convertIntTest2);
+ck_assert_int_eq(convertIntTest2, 1);
+
+ck_assert_int_eq(convertIntTest1, convertIntTest2);
+
+#test dec_to_int
+s21_decimal a = {{123, 0, 0, 0}};
+setScale(&a, 1);
+int int_a;
+
+s21_from_decimal_to_int(a, &int_a);
+ck_assert_int_eq(int_a, 12);
+
+
+#test from_float_to_decimal
+s21_decimal s21ConvertFloattTest1 = {{0,0,0,0}};
+s21_decimal s21ConvertFloattTest2 = {{0,0,0,0}};
+float convertFloatTest1 = 10.0;
+s21_decimal s21ConvertFloat1= {{10,0,0,0}};
+setScale(&s21ConvertFloat1, 0);
+float convertFloatTest2 = 1.5;
+s21_decimal s21ConvertFloat2= {{15,0,0,0}};
+setScale(&s21ConvertFloat2, 1);
+int convertFloatReturn = 0;
+
+convertFloatReturn = s21_from_float_to_decimal(convertFloatTest1, &s21ConvertFloattTest1);
+ck_assert_int_eq(convertFloatReturn, 0);
+ck_assert_int_eq(s21_is_equal(s21ConvertFloattTest1, s21ConvertFloat1), 1);
+convertFloatReturn = s21_from_float_to_decimal(convertFloatTest2, &s21ConvertFloattTest2);
+ck_assert_int_eq(convertFloatReturn, 0);
+ck_assert_int_eq(s21_is_equal(s21ConvertFloattTest2, s21ConvertFloat2), 1);
+
+// ck_assert_float_eq(convertFloatTest1, convertFloatTest2);
+
+#test dec_to_float1
+s21_decimal a = {{5, 0, 0, 2147483648}};
+float dec_to_float_a = 0;
+
+s21_from_decimal_to_float(a, &dec_to_float_a);
+ck_assert_float_eq(dec_to_float_a, -5.0);
+
+#test dec_to_float2
+s21_decimal a = {{13, 0, 0, 0}};
+float dec_to_float_a = 0;
+
+s21_from_decimal_to_float(a, &dec_to_float_a);
+ck_assert_float_eq(dec_to_float_a, 13.0);
+
+
+
+#tcase another_func
+/*
+##test floor1
+s21_decimal a = {{0, 12345, 6789, 0}}, res = {{0, 12345, 6789, 0}};
+s21_decimal floor_a = {0};
+
+s21_floor(a, &floor_a);
+ck_assert_int_eq(s21_is_equal(floor_a, res), 1);
+
+##test floor2
+s21_decimal a = {{2147483648, 12345, 6789, 0}}, res = {{2147483648, 12345, 6789, 0}};
+s21_decimal floor_a = {0};
+
+s21_floor(a, &floor_a);
+ck_assert_int_eq(s21_is_equal(floor_a, res), 1);
+
+##test floor3
+s21_decimal a, res, floor_a;
+s21_from_float_to_decimal(5.5, &a);
+s21_from_float_to_decimal(5, &res);
+s21_floor(a, &floor_a);
+ck_assert_int_eq(s21_is_equal(floor_a, res), 1);
+
+##test floor4
+s21_decimal a, res, floor_a;
+s21_from_float_to_decimal(-5555, &a);
+setScale(&a, 3);
+s21_from_float_to_decimal(-6, &res);
+s21_floor(a, &floor_a);
+ck_assert_int_eq(s21_is_equal(floor_a, res), 1);
+
+
+##test rounding
+##test round1
+s21_decimal a = {{0, 12345, 6789, 0}}, res = {{0, 12345, 6789, 0}};
+s21_decimal round_a = {0};
+
+s21_round(a, &round_a);
+ck_assert_int_eq(s21_is_equal(round_a, res), 1);
+
+##test round2
+s21_decimal a = {{2147483648, 12345, 6789, 0}}, res = {{2147483648, 12345, 6789, 0}};
+s21_decimal round_a = {0};
+
+s21_round(a, &round_a);
+ck_assert_int_eq(s21_is_equal(round_a, res), 1);
+
+##test round3
+s21_decimal a, res, round_a;
+s21_from_float_to_decimal(-5555, &a);
+setScale(&a, 3);
+s21_from_float_to_decimal(-6, &res);
+s21_round(a, &round_a);
+ck_assert_int_eq(s21_is_equal(round_a, res), 1);
+
+
+##test round4
+s21_decimal a, res, round_a;
+s21_from_float_to_decimal(-5.5, &a);
+s21_from_float_to_decimal(-6, &res);
+s21_round(a, &round_a);
+ck_assert_int_eq(s21_is_equal(round_a, res), 1);
+
+*/
+/*
+##test truncate
+s21_decimal s21TruncateTest1 = {{504,0,0,0}};
+setScale(&s21TruncateTest1, 2);
+s21_decimal s21TruncateTest2 = {{505,0,0,0}};
+setScale(&s21TruncateTest2, 2);
+set_sign(&s21TruncateTest2, 1);
+s21_decimal resTruncateTest = {{0,0,0,0}};
+s21_decimal resCorrectTruncateTest1 = {{5,0,0,0}};
+s21_decimal resCorrectTruncateTest2 = {{5,0,0,0}};
+set_sign(&resCorrectTruncateTest2, 1);
+int truncateReturn = 0;
+
+truncateReturn = s21_truncate(s21TruncateTest1, &resTruncateTest);
+ck_assert_int_eq(truncateReturn, 0);
+ck_assert_int_eq(s21_is_equal(resTruncateTest, resCorrectTruncateTest1), 1);
+
+//  resCorrectTruncateTest = {{0,0,0,0}};
+truncateReturn = s21_truncate(s21TruncateTest2, &resTruncateTest);
+ck_assert_int_eq(truncateReturn, 1);
+ck_assert_int_eq(s21_is_equal(resTruncateTest, resCorrectTruncateTest2), 1);
+*/
+/*
+##test negate
+s21_decimal s21NegateTest1 = {{0,0,0,0}};
+s21_decimal s21NegateTest2 = {{0,0,0,0}};
+s21_decimal resNegateTest = {{0,0,0,0}};
+s21_decimal resCorrectNegateTest = {{0,0,0,0}};
+int negateReturn = 0;
+
+negateReturn = s21_negate(s21NegateTest1, &resNegateTest);
+ck_assert_int_eq(negateReturn, 1);
+ck_assert_int_eq(s21_is_equal(resNegateTest, resCorrectNegateTest), 1);
+
+resCorrectNegateTest = {{0,0,0,0}};
+negateReturn = s21_negate(s21NegateTest2, &resNegateTest);
+ck_assert_int_eq(negateReturn, 1);
+ck_assert_int_eq(s21_is_equal(resNegateTest, resCorrectNegateTest), 1);
+
+##test negate1
+s21_decimal a = {{0, 12345, 6789, 0}}, res = {{0, 12345, 6789, 2147483648}};
+s21_decimal negate_a = {0};
+
+s21_negate(a, &negate_a);
+ck_assert_int_eq(s21_is_equal(negate_a, res), 1);
+*/
+
+#include "s21_decimal.h"
+
+#tcase negate
+
+#test negate_1
+s21_decimal dec1 = {{12, 0, 0, 0}};
+s21_decimal res = {{12, 0, 0, -2147483648}};
+s21_negate(dec1, &dec1);
+ck_assert_int_eq(dec1.bits[0], res.bits[0]);
+ck_assert_int_eq(dec1.bits[1], res.bits[1]);
+ck_assert_int_eq(dec1.bits[2], res.bits[2]);
+ck_assert_int_eq(dec1.bits[3], res.bits[3]);
+
+#test negate_2
+s21_decimal dec1 = {{1, 2, 3, -2147483648}};
+s21_decimal res = {{1, 2, 3, 0}};
+s21_negate(dec1, &dec1);
+ck_assert_int_eq(dec1.bits[0], res.bits[0]);
+ck_assert_int_eq(dec1.bits[1], res.bits[1]);
+ck_assert_int_eq(dec1.bits[2], res.bits[2]);
+ck_assert_int_eq(dec1.bits[3], res.bits[3]);
+
+#test negate_3
+s21_decimal dec1 = {{12314, 2346, 367, -2147483648}};
+s21_decimal res = {{12314, 2346, 367, 0}};
+s21_negate(dec1, &dec1);
+ck_assert_int_eq(dec1.bits[0], res.bits[0]);
+ck_assert_int_eq(dec1.bits[1], res.bits[1]);
+ck_assert_int_eq(dec1.bits[2], res.bits[2]);
+ck_assert_int_eq(dec1.bits[3], res.bits[3]);
+
+#test negate_4
+s21_decimal dec1 = {{123, 2, 3, 0}};
+setScale(&dec1, 40);
+//ck_assert_int_eq(s21_negate(dec1, &dec1), 1);
+
+#tcase truncate
+
+#test truncate_1
+s21_decimal dec1 = {{504, 0, 0, 0}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{5, 0, 0, 0}};
+setScale(&dec1, 2);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_2
+s21_decimal dec1 = {{1110224, 0, 0, 0}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{0, 0, 0, 0}};
+setScale(&dec1, 7);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_3
+s21_decimal dec1 = {{504, 0, 0, 0}};
+s21_decimal dec2 = {{0}};
+setScale(&dec1, 30);
+ck_assert_int_eq(s21_truncate(dec1, &dec2), 1);
+
+#test truncate_4
+s21_decimal dec1 = {{77, 2, 0, 0}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{pow(2,33)/100+1, 0, 0, 0}};
+setScale(&dec1, 2);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_5
+s21_decimal dec1 = {{77, 1, 0, 0}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{pow(2,32)/1000, 0, 0, 0}};
+setScale(&dec1, 3);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_6
+s21_decimal dec1 = {{771, 0, 0, 0}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{7, 0, 0, 0}};
+setScale(&dec1, 2);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_7
+s21_decimal dec1 = {{7716, 0, 0, -2147483648}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{77, 0, 0, -2147483648}};
+setScale(&dec1, 2);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_8
+s21_decimal dec1 = {{7716, 0, 0, -2147483648}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{77, 0, 0, -2147483648}};
+setScale(&dec1, 2);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_9
+s21_decimal dec1 = {{0, 4, 0, -2147483648}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{pow(2, 34)/pow(10, 11), 0, 0, -2147483648}};
+setScale(&dec1, 11);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#test truncate_10
+s21_decimal dec1 = {{0, 0, 4, -2147483648}};
+s21_decimal dec2 = {{0}};
+s21_decimal true_res = {{pow(2, 66)/pow(10, 11), 0, 0, -2147483648}};
+setScale(&dec1, 11);
+s21_truncate(dec1, &dec2);
+ck_assert_int_eq(dec2.bits[0], true_res.bits[0]);
+ck_assert_int_eq(dec2.bits[1], true_res.bits[1]);
+ck_assert_int_eq(dec2.bits[2], true_res.bits[2]);
+ck_assert_int_eq(dec2.bits[3], true_res.bits[3]);
+
+#tcase int_decimal
+
+#test int_decimal_1
+s21_decimal res = {{0}};
+s21_decimal true_res = {{15, 0, 0, 0}};
+int value = 15;
+s21_from_int_to_decimal(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+
+#test int_decimal_2
+s21_decimal res = {{0}};
+s21_decimal true_res = {{15, 0, 0, -2147483648}};
+int value = -15;
+s21_from_int_to_decimal(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test int_decimal_3
+s21_decimal res = {{0}};
+s21_decimal true_res = {{356098, 0, 0, -2147483648}};
+int value = -356098;
+s21_from_int_to_decimal(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test int_decimal_4
+s21_decimal res = {{0}};
+s21_decimal true_res = {{356098, 0, 0, 0}};
+int value = 356098;
+s21_from_int_to_decimal(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#tcase decimal_int
+
+#test decimal_int_1
+s21_decimal value = {{356098, 0, 0, 0}};
+int true_res = 356098;
+int res = 0;
+s21_from_decimal_to_int(value, &res);
+ck_assert_int_eq(res, true_res);
+
+#test decimal_int_2
+s21_decimal value = {{356098, 0, 0, 0}};
+setScale(&value, 50);
+int res = 0;
+ck_assert_int_eq(s21_from_decimal_to_int(value, &res), 1);
+
+#test decimal_int_3
+s21_decimal value = {{14, 2, 5, 0}};
+int res = 0;
+ck_assert_int_eq(s21_from_decimal_to_int(value, &res), 1);
+
+#test decimal_int_4
+s21_decimal value = {{14, 1, 0, 0}};
+int res = 0;
+ck_assert_int_eq(s21_from_decimal_to_int(value, &res), 1);
+
+#test decimal_int_5
+s21_decimal value = {{356098, 0, 0, -2147483648}};
+int true_res = -356098;
+int res = 0;
+s21_from_decimal_to_int(value, &res);
+ck_assert_int_eq(res, true_res);
+
+#test decimal_int_6
+s21_decimal value = {{356098, 1, 0, -2147483648}};
+int res = 0;
+ck_assert_int_eq(s21_from_decimal_to_int(value, &res), 1);
+
+#test decimal_int_7
+s21_decimal value = {{165678, 0, 0, 0}};
+int true_res = 165;
+setScale(&value, 3);
+int res = 0;
+s21_from_decimal_to_int(value, &res);
+ck_assert_int_eq(res, true_res);
+
+#tcase decimal_float
+
+#test decimal_float_1
+s21_decimal value = {{148, 0, 0, 0}};
+setScale(&value, 1);
+float res = 0;
+float true_res = 14.8;
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_2
+s21_decimal value = {{148, 4, 0, 0}};
+setScale(&value, 1);
+float res = 0;
+float true_res = 14.8 + 0.4 * 4294967296;
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_4
+s21_decimal value = {{0, 0, 1, 0}};
+setScale(&value, 2);
+float res = 0;
+float true_res = pow(2, 64)/100;
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_5
+s21_decimal value = {{145, 0, 0, -2147483648}};
+float res = 0;
+float true_res = -145;
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_6
+s21_decimal value = {{145, 2, 0, -2147483648}};
+float res = 0;
+float true_res = - 145 - pow(2, 33);
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_7
+s21_decimal value = {{145, 2, 1, -2147483648}};
+setScale(&value, 2);
+float res = 0;
+float true_res = (145 - pow(2, 33) - pow(2, 64))/100;
+s21_from_decimal_to_float(value, &res);
+ck_assert_float_eq(true_res, res);
+
+#test decimal_float_8
+s21_decimal value = {{145, 2, 1, -2147483648}};
+setScale(&value, 29);
+float res = 0;
+ck_assert_float_eq(s21_from_decimal_to_float(value, &res), 1);
+
+#tcase float_decimal
+
+#test float_decimal_1
+s21_decimal res = {{0}};
+float value = 12;
+s21_decimal true_res = {{12, 0, 0, 0}};
+setScale(&true_res, 0);
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+
+#test float_decimal_2
+s21_decimal res = {{0}};
+float value = 12 + pow(2, 32);
+s21_decimal true_res = {{0, 1, 0, 0}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+
+#test float_decimal_3
+s21_decimal res = {{0}};
+float value = 12 + pow(2, 32) + pow(2, 64);
+s21_decimal true_res = {{0, 0, 1, 0}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+ck_assert_int_eq(true_res.bits[2], res.bits[2]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+
+#test float_decimal_4
+s21_decimal res = {{0}};
+float value = -15.12;
+s21_decimal true_res = {{1512, 0, 0, -2147483648 + pow(2,17)}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+ck_assert_int_eq(true_res.bits[2], res.bits[2]);
+
+#test float_decimal_5
+s21_decimal res = {{0}};
+float value =  pow(2, 36);
+s21_decimal true_res = {{0, 16, 0, 0}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+ck_assert_int_eq(true_res.bits[2], res.bits[2]);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+
+#test float_decimal_6
+s21_decimal res = {{0}};
+float value = -156.12;
+s21_decimal true_res = {{15612, 0, 0, -2147483648 + pow(2,17)}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+ck_assert_int_eq(true_res.bits[2], res.bits[2]);
+
+#test float_decimal_7
+s21_decimal res = {{0}};
+float value = pow(2, 60);
+s21_decimal true_res = {{0, pow(2, 60-32), 0, 0}};
+s21_from_float_to_decimal(value, &res);
+ck_assert_int_eq(true_res.bits[3], res.bits[3]);
+ck_assert_int_eq(true_res.bits[2], res.bits[2]);
+ck_assert_int_eq(true_res.bits[0], res.bits[0]);
+ck_assert_int_eq(true_res.bits[1], res.bits[1]);
+
+#tcase division
+
+#test division_1
+s21_decimal value = {{16, 0, 0, 0}};
+s21_decimal value1 = {{4, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_decimal true_res = {{4, 0, 0, 0}};
+s21_div(value, value1, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+
+#test division_2
+s21_decimal value = {{20, 0, 0, 0}};
+s21_decimal value1 = {{4, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_decimal true_res = {{5, 0, 0, 0}};
+s21_div(value, value1, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+
+#test division_3
+s21_decimal value = {{504, 0, 0, 0}};
+s21_decimal value1 = {{100, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_decimal true_res = {{504, 0, 0, 0}};
+setScale(&true_res, 2);
+s21_div(value, value1, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+
+#tcase round
+
+#test round_1
+s21_decimal value = {{564, 0, 0, 0}};
+setScale (&value, 2);
+s21_decimal true_res = {{6, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_2
+s21_decimal value = {{514, 0, 0, 0}};
+setScale (&value, 2);
+s21_decimal true_res = {{5, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_3
+s21_decimal value = {{514, 0, 0, 0}};
+s21_decimal true_res = {{514, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_4
+s21_decimal value = {{514, 0, 0, -2147483648}};
+s21_decimal true_res = {{514, 0, 0, -2147483648}};
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_5
+s21_decimal value = {{514, 0, 0, -2147483648}};
+s21_decimal true_res = {{1, 0, 0, -2147483648}};
+setScale (&value, 3);
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_6
+s21_decimal value = {{414, 0, 0, -2147483648}};
+s21_decimal true_res = {{0, 0, 0, -2147483648}};
+setScale (&value, 3);
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_7
+s21_decimal value = {{414, 0, 0, -2147483648}};
+setScale (&value, 41);
+s21_decimal res = {{0}};
+ck_assert_int_eq(s21_round(value, &res), 1);
+
+#test round_8
+s21_decimal value = {{414, 8, 0, 0}};
+s21_decimal true_res = {{34359739, 0, 0, 0}};
+setScale (&value, 3);
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test round_9
+s21_decimal value = {{65414, 10000, 0, -2147483648}};
+s21_decimal true_res = {{7, 1, 0, -2147483648}};
+setScale (&value, 4);
+s21_decimal res = {{0}};
+s21_round(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+
+#tcase floor
+
+#test floor_1
+s21_decimal value = {{564, 0, 0, 0}};
+setScale (&value, 2);
+s21_decimal true_res = {{5, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_2
+s21_decimal value = {{564, 0, 0, -2147483648}};
+setScale (&value, 2);
+s21_decimal true_res = {{6, 0, 0, -2147483648}};
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_3
+s21_decimal value = {{564, 0, 0, -2147483648}};
+s21_decimal true_res = {{564, 0, 0, -2147483648}};
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_4
+s21_decimal value = {{564, 0, 0, 0}};
+s21_decimal true_res = {{564, 0, 0, 0}};
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_5
+s21_decimal value = {{514, 0, 0, -2147483648}};
+s21_decimal true_res = {{6, 0, 0, -2147483648}};
+setScale (&value, 2);
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_6
+s21_decimal value = {{514, 0, 0, 0}};
+s21_decimal true_res = {{5, 0, 0, 0}};
+setScale (&value, 2);
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
+
+#test floor_7
+s21_decimal value = {{5, 0, 0, 0}};
+setScale (&value, 29);
+s21_decimal res = {{0}};
+ck_assert_int_eq(s21_floor(value, &res), 1);
+
+#test floor_8
+s21_decimal value = {{7214, 1, 0, 0}};
+s21_decimal true_res = {{pow(2,32)/1000 + 7, 0, 0, 0}};
+setScale (&value, 3);
+s21_decimal res = {{0}};
+s21_floor(value, &res);
+s21_decimal test = {{0}};
+set_bit_1(&test, 31);
+set_bit_1(&test, 1);
+ck_assert_int_eq(res.bits[0], true_res.bits[0]);
+ck_assert_int_eq(res.bits[1], true_res.bits[1]);
+ck_assert_int_eq(res.bits[2], true_res.bits[2]);
+ck_assert_int_eq(res.bits[3], true_res.bits[3]);
