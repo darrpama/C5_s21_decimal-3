@@ -25,8 +25,9 @@ else
 	CHKFLAGS = -lcheck -lrt -lm -lpthread -lsubunit
 endif
 
-all: clean s21_decimal.a test1 gcov_report
-	@make clean
+all: clean s21_decimal.a test1
+	make clean
+	rm s21_decimal.a
 
 s21_decimal.a: s21_decimal.o
 	ar rc s21_decimal.a $(O_FILES)
@@ -79,7 +80,7 @@ check:
 	cppcheck *.c *.h
 	cppcheck $(C_FILES)
 	python3 ../materials/linters/cpplint.py --extensions=c $(C_FILES) 
-	python3 ../materials/linters/cpplint.py --extensions=c *.c *.h
+	python3 ../materials/linters/cpplint.py --extensions=c */*.c *.h
 
 clean: 
 	@rm -rf *.o *.gcda *.gcno *.out *.gch *.info
