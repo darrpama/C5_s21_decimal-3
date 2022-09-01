@@ -16,7 +16,6 @@ int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
         } else if (flagOne == 2) {
             longAdder(longDec2, longDec1, &longRes, 1);
             znak = getBit(value_2, 127);
-            ;
         }
     } else {
         longAdder(longDec1, longDec2, &longRes, 0);
