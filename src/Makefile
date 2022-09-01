@@ -76,11 +76,10 @@ decimal_test.o:
 	rm decimal_test.c
 
 check:
-	cp ../materials/linters/CPPLINT.cfg .
-	cppcheck *.c *.h
-	cppcheck $(C_FILES)
-	python3 ../materials/linters/cpplint.py --extensions=c $(C_FILES) 
-	python3 ../materials/linters/cpplint.py --extensions=c */*.c *.h
+	cp ../materials/linters/.clang-format .
+	cppcheck $(C_FILES) *.h
+	clang-format -n $(C_FILES) *.h
+    
 
 clean: 
 	@rm -rf *.o *.gcda *.gcno *.out *.gch *.info

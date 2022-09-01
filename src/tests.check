@@ -852,9 +852,11 @@ ck_assert_int_eq(true_res.bits[2], res.bits[2]);
 ck_assert_int_eq(true_res.bits[0], res.bits[0]);
 
 #test float_decimal_4
-s21_decimal res = {{0}};
+s21_decimal res = {{0,0,0,0}};
 float value = -15.12;
-s21_decimal true_res = {{1512, 0, 0, -2147483648 + pow(2,17)}};
+s21_decimal true_res = {{1512, 0, 0, 0}};
+set_sign(&true_res, 1);
+setScale(&true_res, 2);
 s21_from_float_to_decimal(value, &res);
 ck_assert_int_eq(true_res.bits[3], res.bits[3]);
 ck_assert_int_eq(true_res.bits[0], res.bits[0]);

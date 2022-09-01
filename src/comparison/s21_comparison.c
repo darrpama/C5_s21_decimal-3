@@ -8,11 +8,11 @@ int s21_is_less(s21_decimal x, s21_decimal y) {
     int signx = sign_number(x);
     int signy = sign_number(y);
     //  0 +; 1 -;
-    if (!signx && signy) {          //  x > 0, y < 0
+    if (!signx && signy) {  //  x > 0, y < 0
         result = 0;
-    } else if (signx && !signy) {    //  x < 0, y > 0
+    } else if (signx && !signy) {  //  x < 0, y > 0
         result = 1;
-    } else if (signx && signy) {    //  x < 0, y < 0
+    } else if (signx && signy) {  //  x < 0, y < 0
         set_zero(&x, 127);
         set_zero(&y, 127);
         result = s21_is_greater(x, y);
@@ -38,11 +38,11 @@ int s21_is_less_or_equal(s21_decimal x, s21_decimal y) {
     int signx = sign_number(x);
     int signy = sign_number(y);
     //  0 +; 1 -;
-    if (!signx && signy) {          //  x > 0, y < 0
+    if (!signx && signy) {  //  x > 0, y < 0
         result = 0;
-    } else if (signx && !signy) {    //  x < 0, y > 0
+    } else if (signx && !signy) {  //  x < 0, y > 0
         result = 1;
-    } else if (signx && signy) {    //  x < 0, y < 0
+    } else if (signx && signy) {  //  x < 0, y < 0
         set_zero(&x, 127);
         set_zero(&y, 127);
         result = s21_is_greater_or_equal(x, y);
@@ -62,13 +62,9 @@ int s21_is_less_or_equal(s21_decimal x, s21_decimal y) {
     return result;
 }
 
-int s21_is_greater(s21_decimal x, s21_decimal y) {
-    return (s21_is_less(y, x));
-}
+int s21_is_greater(s21_decimal x, s21_decimal y) { return (s21_is_less(y, x)); }
 
-int s21_is_greater_or_equal(s21_decimal x, s21_decimal y) {
-    return (s21_is_less_or_equal(y, x));
-}
+int s21_is_greater_or_equal(s21_decimal x, s21_decimal y) { return (s21_is_less_or_equal(y, x)); }
 
 int s21_is_equal(s21_decimal x, s21_decimal y) {
     int result = 1;

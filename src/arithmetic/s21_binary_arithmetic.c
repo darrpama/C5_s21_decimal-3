@@ -11,8 +11,7 @@ int halfAdder(int a, int b, int *c) {  //  полусумматор
 
 //  op 0 = +
 //  op 1 = -
-void adder(s21_decimal dec1, s21_decimal dec2, \
-s21_decimal *res, int op) {  //  суматор с функцией вычитания
+void adder(s21_decimal dec1, s21_decimal dec2, s21_decimal *res, int op) {  //  суматор с функцией вычитания
     int c = op;
     for (int i = 0; i < 96; i++) {
         setBit(res, i, halfAdder(getBit(dec1, i), op ^ getBit(dec2, i), &c));
@@ -20,12 +19,10 @@ s21_decimal *res, int op) {  //  суматор с функцией вычита
     }
 }
 
-void longAdder(s21_long dec1, s21_long dec2, \
-s21_long *res, int op) {  //  суматор с функцией вычитания
+void longAdder(s21_long dec1, s21_long dec2, s21_long *res, int op) {  //  суматор с функцией вычитания
     int c = op;
     for (int i = 0; i < 223; i++) {
-        setLongBit(res, i, halfAdder(getLongBit(dec1, i), \
-        op ^ getLongBit(dec2, i), &c));
+        setLongBit(res, i, halfAdder(getLongBit(dec1, i), op ^ getLongBit(dec2, i), &c));
         setLongBit(res, i + 1, c);
     }
 }
@@ -36,7 +33,7 @@ void longDivGetWholeAndRem(s21_long *dec1, s21_long dec2, s21_long *res) {
     s21_long temp = {{0, 0, 0, 0, 0, 0, 0}};
     s21_long temp2 = {{0, 0, 0, 0, 0, 0, 0}};
     int firstBitDec = getLongFirstIndexBit(*dec1) - getLongFirstIndexBit(dec2);
-    for (int i = 0; i <= firstBitDec ; i++) {
+    for (int i = 0; i <= firstBitDec; i++) {
         setLongNullBit(&temp);
         temp2 = dec2;
         funcLongSdvig(&temp2, firstBitDec - i);
@@ -62,8 +59,7 @@ int funcLongUmn(s21_long dec1, s21_long dec2, s21_long *res) {
         setLongNullBit(&temp);
         for (int j = 0; j < 221 && flag; j++) {
             if (getLongBit(dec2, i)) {
-                setLongBit(&temp, j+i, getLongBit(dec1, j) & \
-                getLongBit(dec2, i));
+                setLongBit(&temp, j + i, getLongBit(dec1, j) & getLongBit(dec2, i));
                 if (getLongBit(dec1, j) && i + j >= 221) {
                     flag = 0;
                 }

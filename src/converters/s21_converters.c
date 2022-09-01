@@ -8,6 +8,8 @@ s21_long fromDecTLong(s21_decimal dec1) {
     return temp;
 }
 
+int s21_inf(float src) { return (src == 1.0 / 0.0 || src == -1.0 / 0.0); }
+
 s21_decimal funcResultToDecimal(s21_long longRes, int scale, int znak) {
     int codeError = 0;
     s21_decimal result = {{0, 0, 0, 0}};
@@ -42,41 +44,36 @@ s21_decimal funcResultToDecimal(s21_long longRes, int scale, int znak) {
 }
 
 int s21_from_float_to_decimal(float src, s21_decimal* dst) {
-    int neg_flag = 0;
-    int errors = 0;
-    if (src == S2_INF || s21_nan(src) || src == -S2_INF || \
-    src > S21_DEC_MAX || src < -S21_DEC_MAX || dst == NULL)
-        errors = 1;
-    if (src < 0) {
-        neg_flag = 1;
-        src *= -1;
-    }
-    int float_exp = get_float_exp(src);
-    if (float_exp > 95) {
-        errors = 1;
-    } else if (float_exp < -94) {
-        errors = 1;
+    setNullBit(dst);
+    int error_code = 0;
+    if (s21_nan(src) || s21_inf(src) || fabs(src) > S21_DEC_MAX || fabs(src) < 1e-28f) {
+        error_code = 1;
     } else {
-        setNullBit(dst);
-        float float_temp = src;
-        int scale = float_normalize(&float_temp, &float_exp);
-        if (scale > 28) {
-            errors = 1;
-        } else {
-            set_bit_1(dst, float_exp);
-            unsigned int int_src = *((unsigned int *)&float_temp);
-            unsigned int mask = set_mask(22);
-            for (int pos = float_exp-1; mask; mask >>= 1, pos--) {
-                if ( !!(mask & int_src) )
-                    set_bit_1(dst, pos);
-            }
-            if (neg_flag == 1) {
-                set_bit_1(dst, 127);
-            }
-                float_razryad(scale, dst);
+        int float_exp = 0, neg_flag = src < 0;
+        double double_src = (double)fabs(src);
+        float float_temp = 0;
+        int scale = float_preparation(double_src, &float_temp, &float_exp);
+        unsigned int int_src = *((unsigned int*)&float_temp);
+        if (src != 0) set_bit_1(dst, float_exp);
+        float_exp--;
+        for (int i = 22; i >= 0; float_exp--, i--) {
+            if ((int_src >> i) & 1) set_bit_1(dst, float_exp);
         }
+        setScale(dst, scale);
+        if (neg_flag) set_bit_1(dst, 127);
     }
-    return errors;
+    return error_code;
+}
+
+int float_preparation(double src, float* temp, int* float_exp) {
+    int scale = 0;
+    for (; scale < 28 && (int)src != src && !((int)(src / pow(10, 8))); src *= 10, scale++) {
+    }
+    *temp = (float)round(src);
+    for (; scale > 0 && !((int)(*temp) % 10); (*temp) /= 10, scale--) {
+    }
+    *float_exp = get_float_exp(*temp);
+    return scale;
 }
 
 // возвращает экспоненту float-числа
@@ -88,49 +85,10 @@ int get_float_exp(float src) {
     for (int i = 0; i < 8; i++) {
         beat = !!(int_src & mask);
         mask <<= 1;
-        if (beat == 1)
-            res += pow(2, i);
+        if (beat == 1) res += pow(2, i);
     }
     res -= 127;
     return res;
-}
-
-/* домножает src-число до целочисленного значения, параллельно меняя 
-значение экспоненты и возвращая scale */
-int float_normalize(float* src, int* float_exp) {
-    int scale = 0;
-    for (; !(int)(*src); scale++) {
-        *src *= 10;
-    }
-    while (*src <= pow(10, 8)) {
-        scale++;
-        (*src) *= 10;
-    }
-    while ((int)(*src) % 10 == 0 && scale) {
-        *src /= 10;
-        scale--;
-    }
-    *float_exp = get_float_exp(*src);
-    return scale;
-}
-
-// устанавливает маску с единичкой в нужной позиции
-unsigned int set_mask(int position) {
-    unsigned int mask = 1;
-    for (int i = 1; i <= position; i++)
-        mask <<= 1;
-    return mask;
-}
-
-//  устанавливает scale для decimal-структуры
-void float_razryad(int scale, s21_decimal* dst) {
-    unsigned int mask = 1;
-    for (int i = 0; i < 8; i++) {
-        if (scale & mask) {
-            set_bit_1(dst, 112 + i);
-        }
-        mask <<= 1;
-    }
 }
 
 int s21_from_int_to_decimal(int src, s21_decimal* dst) {
@@ -164,8 +122,7 @@ int s21_from_decimal_to_int(s21_decimal src, int* dst) {
 }
 
 long double fabsl(long double number) {
-    if (number < 0)
-        number *= -1;
+    if (number < 0) number *= -1;
     return number;
 }
 
@@ -177,16 +134,13 @@ long double from_decimal_to_double(s21_decimal src) {
         for (int y = 0; y < 32; y++) {
             beat = !!(src.bits[i] & mask);
             mask <<= 1;
-            if (beat == 1)
-                dst += pow(2, y + (i * 32));
+            if (beat == 1) dst += pow(2, y + (i * 32));
         }
         mask = 1;
     }
     int exp = scale_finder(src);
-    for (int i = 0; i < exp; i++)
-        dst /= 10;
-    if (sign_number(src))
-        dst *= -1;
+    for (int i = 0; i < exp; i++) dst /= 10;
+    if (sign_number(src)) dst *= -1;
     return dst;
 }
 
@@ -194,19 +148,19 @@ int s21_from_decimal_to_float(s21_decimal src, float* dst) {
     int error = 0;
     if (error_finder(src) || dst == NULL) {
         error = 1;
-        if (scale_finder(src) > 28)
-            *dst = 0;
+        if (scale_finder(src) > 28) *dst = 0;
     } else {
+        *dst = 0;
+        long double temp = 0;
+        int scale = scale_finder(src);
         for (int i = 0; i < 96; i++) {
             if (get_bit(src, i)) {
-                *dst += pow(2, i);
+                temp += pow(2, i);
             }
         }
-        int scale = scale_finder(src);
-        for (int i = 0; i < scale; i++)
-            *dst = *dst / 10;
-        if (sign_number(src))
-            *dst = - (*dst);
+        temp *= powl(10.f, -scale);
+        *dst = temp;
+        if (sign_number(src)) *dst = -(*dst);
     }
     return error;
 }
@@ -217,23 +171,18 @@ int error_finder(s21_decimal dec) {
     int error = 0, dec1 = 0;
     for (int i = 0; i < 4; i++) {
         dec1 = dec.bits[i];
-        if (dec1 == S2_INF || s21_nan(dec1) || scale_finder(dec) > 28 \
-        || dec1 == -S2_INF)
-            error = 1;
+        if (dec1 == S2_INF || s21_nan(dec1) || scale_finder(dec) > 28 || dec1 == -S2_INF) error = 1;
     }
     return error;
 }
 
-int s21_nan(long double x) {
-    return x != x ? 1 : 0;
-}
+int s21_nan(long double x) { return x != x ? 1 : 0; }
 
 // возвращает scale-значение структуры decimal
 int scale_finder(s21_decimal dec) {
     int scale = 0;
     for (int i = 112; i < 120; i++) {
-        if (get_bit(dec, i))
-            scale += pow(2, i - 112);
+        if (get_bit(dec, i)) scale += pow(2, i - 112);
     }
     return scale;
 }
