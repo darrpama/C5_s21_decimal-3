@@ -62,13 +62,6 @@ another_test.o:
 	$(CC) $(CFLAGS) -c another_test.c -o another_test.o $(CHKFLAGS)
 	rm another_test.c
 
-test2.o:
-	$(CC) $(CFLAGS) -c test.c -o test2.o $(CHKFLAGS)
-
-test2: test2.o s21_decimal.o
-	$(CC) $(CFLAGS) $(O_FILES) test2.o -o test.out $(CHKFLAGS)
-	./test.out
-
 decimal_test.o:
 	chmod 777 tests.check
 	checkmk clean_mode=1 tests.check > decimal_test.c
