@@ -45,13 +45,14 @@ s21_decimal funcResultToDecimal(s21_long longRes, int scale, int znak) {
 
 int float_preparation(double src, float* temp, int* float_exp) {
     int scale = 0;
-    for (; scale <= 28 && !((int)src / 100000000) && (int)src != src; src *= 10, scale++) {}
+    for (; scale <= 28 && !((int)src / 100000000) && (int)src != src; src *= 10, scale++) {
+    }
     *temp = (float)round(src);
-    for (; scale > 0 && !((int)(*temp) % 10); (*temp) /= 10, scale--) {}
+    for (; scale > 0 && !((int)(*temp) % 10); (*temp) /= 10, scale--) {
+    }
     *float_exp = get_float_exp(*temp);
     return scale;
 }
-
 
 int s21_from_float_to_decimal(float src, s21_decimal* dst) {
     setNullBit(dst);
@@ -63,17 +64,14 @@ int s21_from_float_to_decimal(float src, s21_decimal* dst) {
         double double_src = (double)fabs(src);
         float float_temp = 0;
         int scale = float_preparation(double_src, &float_temp, &float_exp);
-        unsigned int int_src = *((unsigned int *)&float_temp);
-        if (src != 0)
-            set_bit_1(dst, float_exp);
+        unsigned int int_src = *((unsigned int*)&float_temp);
+        if (src != 0) set_bit_1(dst, float_exp);
         float_exp--;
         for (int i = 22; i >= 0; float_exp--, i--) {
-            if ((int_src >> i) & 1)
-                set_bit_1(dst, float_exp);
+            if ((int_src >> i) & 1) set_bit_1(dst, float_exp);
         }
         setScale(dst, scale);
-        if (neg_flag)
-            set_bit_1(dst, 127);
+        if (neg_flag) set_bit_1(dst, 127);
     }
     return error_code;
 }
@@ -150,8 +148,7 @@ int s21_from_decimal_to_float(s21_decimal src, float* dst) {
     int error = 0;
     if (error_finder(src) || dst == NULL) {
         error = 1;
-        if (scale_finder(src) > 28)
-            *dst = 0;
+        if (scale_finder(src) > 28) *dst = 0;
     } else {
         *dst = 0;
         long double temp = 0;
@@ -163,9 +160,7 @@ int s21_from_decimal_to_float(s21_decimal src, float* dst) {
         }
         temp *= powl(10.f, -scale);
         *dst = temp;
-        if (sign_number(src))
-            *dst = - (*dst);
-        
+        if (sign_number(src)) *dst = -(*dst);
     }
     return error;
 }
