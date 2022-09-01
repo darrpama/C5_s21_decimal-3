@@ -155,7 +155,7 @@ int s21_from_decimal_to_float(s21_decimal src, float* dst) {
         int scale = scale_finder(src);
         for (int i = 0; i < 96; i++) {
             if (get_bit(src, i)) {
-                temp += pow(2, i);
+                temp += powl(2, i);
             }
         }
         temp *= powl(10.f, -scale);
